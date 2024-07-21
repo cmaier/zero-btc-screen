@@ -12,13 +12,18 @@ from config.config import config
 from logs import logger
 from presentation.observer import Observable
 
+from waveshare_epd import epd2in13b_V4
+epd = epd2in13b_V4.EPD()
+
+import signal
+
 DATA_SLICE_DAYS = 1
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
 
+data_sink = Observable()
 
 def get_dummy_data():
     logger.info('Generating dummy data')
-
 
 
 def fetch_prices():
@@ -34,10 +39,28 @@ def fetch_prices():
     return prices
 
 
+def exit_gracefully():
+        logger.info('Exit')
+        data_sink.close()
+        logger.info("Clear...")
+        epd.init()
+        epd.clear()
+        logger.info("Goto Sleep...")
+        epd.sleep()
+        exit()
+
+
+def handler_stop_signals(signum, frame):
+    exit_gracefully()
+
+
+signal.signal(signal.SIGINT, handler_stop_signals)
+signal.signal(signal.SIGTERM, handler_stop_signals)
+
+
 def main():
     logger.info('Initialize')
 
-    data_sink = Observable()
     builder = Builder(config)
     builder.bind(data_sink)
 
@@ -53,9 +76,7 @@ def main():
     except IOError as e:
         logger.error(str(e))
     except KeyboardInterrupt:
-        logger.info('Exit')
-        data_sink.close()
-        exit()
+        exit_gracefully()
 
 
 if __name__ == "__main__":

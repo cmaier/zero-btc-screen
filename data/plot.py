@@ -19,7 +19,7 @@ class Plot:
     def y_axis_labels(prices, font, position_first=(0, 0), position_last=(0, 0), draw=None, fill=None, labels_number=3):
         def center_x(price):
             area_width = position_last[0] - position_first[0]
-            text_width, _ = draw.textsize(price, font)
+            text_width = draw.textlength(price, font)
             if area_width >= text_width:
                 return position_first[0] + (area_width - text_width) / 2
             else:
@@ -43,7 +43,7 @@ class Plot:
         price_text = price_text + "%"
         if percentage > 0:
             price_text = "+" + price_text
-        text_width, _ = draw.textsize(price_text, font)
+        text_width = draw.textlength(price_text, font)
         price_position = ((x_middle - (text_width / 2)), y)
         draw.text(price_position, price_text, font=font, fill=fill)
         return text_width
@@ -52,7 +52,7 @@ class Plot:
     def caption(price, y, screen_width, font, draw, fill=None, currency_offset=-1, price_offset=60):
         draw.text((currency_offset, y), config.currency[:3], font=font, fill=fill)
         price_text = Plot.human_format(price, 8, 2)
-        text_width, _ = draw.textsize(price_text, font)
+        text_width = draw.textlength(price_text, font)
         price_position = (((screen_width - text_width - price_offset) / 2) + price_offset, y)
         draw.text(price_position, price_text, font=font, fill=fill)
 
@@ -71,11 +71,11 @@ class Plot:
         candle_data = []
         for i in range(data_offset, len(data), windows_per_candle):
             window = data[i:i + windows_per_candle]
-            open = window[0][0]
+            open = window[0][2]
             close = window[len(window) - 1][3]
             high = max([i[1] for i in window])
-            low = min([i[2] for i in window])
-            candle_data.append((open, high, low, close))
+            low = min([i[0] for i in window])
+            candle_data.append((low, high, open, close))
 
         all_values = [item for sublist in candle_data for item in sublist]
         max_price = max(all_values)
@@ -93,24 +93,25 @@ class Plot:
             return height - (y * height) + position[1]
 
         for i, element in enumerate(normalised_data):
-            open = element[0]
+            open = element[2]
             close = element[3]
             high = element[1]
-            low = element[2]
+            low = element[0]
             x = candle_width * i + space * i + leftover_space / 2 + position[0]
             # high price
             wick_x = x + (candle_width // 2)
             draw.line([wick_x, y_flip(high), wick_x, y_flip(max(open, close))], fill=fill_pos)
             # low price
-            draw.line([wick_x, y_flip(low), wick_x, y_flip(min(open, close))], fill=fill_pos)
+            if low < open:
+                draw.line([wick_x, y_flip(low), wick_x, y_flip(min(open, close))], fill=fill_pos)
 
             open_y = math.floor(y_flip(open))
             close_y = math.floor(y_flip(close))
             if open_y == close_y:
-                draw.line([x, open_y, x + candle_width - 1, close_y], fill=fill_pos)
+                draw.line([x, close_y, x + candle_width - 1, open_y], fill=fill_pos)
             else:
                 if open < close:
-                    draw.rectangle([x, open_y, x + candle_width - 1, close_y], fill=fill_pos)
+                    draw.rectangle([x, close_y, x + candle_width - 1, open_y], fill=fill_pos)
                 else:
                     draw.rectangle([x, open_y, x + candle_width - 1, close_y], fill=fill_neg)
 
