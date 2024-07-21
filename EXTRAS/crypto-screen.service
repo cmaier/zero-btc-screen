@@ -1,0 +1,14 @@
+[Unit]
+Description=Crypto Tracker Screen
+After=network.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/zero-btc-screen
+ExecStart=/home/pi/zero-btc-screen/.venv/bin/python main.py
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
