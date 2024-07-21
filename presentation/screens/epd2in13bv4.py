@@ -52,10 +52,8 @@ class Epd2in13bv4(Observer):
         # epd.presentation(epd.getbuffer(screen_image_rotated))
         image_ry_rotated = self.image_ry.rotate(180)
         self.epd.display(
-            #self.epd.getbuffer(image_black_rotated),
-            self.epd.getbuffer(self.image_black),
-            #self.epd.getbuffer(image_ry_rotated)
-            self.epd.getbuffer(self.image_ry)
+            self.epd.getbuffer(image_black_rotated),
+            self.epd.getbuffer(image_ry_rotated)
         )
 
     def close(self):
